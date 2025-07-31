@@ -3,19 +3,15 @@ import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 
-/**
- * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
- */
 export const backend = defineBackend({
   auth,
   data,
   helloFunction: defineFunction({
     entry: './functions/myFunction.ts',
-    environment: {
-      TABLE_NAME: "Sandwich-rldvnrxg3rbodhzakjlfddvm2m-NONE",
-    }
   }),
 });
+const sandwichTable = backend.data.resources.tables["Sandwich"];
+backend.helloFunction.addEnvironment("TABLE_NAME", sandwichTable.tableName);
 
 // Grant the function access to the Sandwich table
 backend.helloFunction.resources.lambda.addToRolePolicy(
@@ -29,6 +25,6 @@ backend.helloFunction.resources.lambda.addToRolePolicy(
       'dynamodb:Scan',
       'dynamodb:Query'
     ],
-    resources: [`arn:aws:dynamodb:us-east-2:163708692240:table/Sandwich-rldvnrxg3rbodhzakjlfddvm2m-NONE`]
+    resources: [sandwichTable.tableArn]
   })
 );
