@@ -1,4 +1,4 @@
-import { defineBackend } from '@aws-amplify/backend';
+import { defineBackend, defineFunction } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 
@@ -8,4 +8,12 @@ import { data } from './data/resource';
 defineBackend({
   auth,
   data,
+});
+
+export const backend = defineBackend({
+  auth,
+  data,
+  helloFunction: defineFunction({
+    entry: './amplify/functions/myFunction.ts',
+  }),
 });
