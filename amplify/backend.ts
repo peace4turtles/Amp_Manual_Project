@@ -29,6 +29,6 @@ backend.helloFunction.resources.lambda.addToRolePolicy(
       'dynamodb:Scan',
       'dynamodb:Query'
     ],
-    resources: [backend.data.resources.tables["Sandwich"].tableArn]
+    resources: [`arn:aws:dynamodb:*:*:table/Sandwich*`]
   })
 );
