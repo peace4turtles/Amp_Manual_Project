@@ -9,6 +9,6 @@ export const backend = defineBackend({
   auth,
   data,
   helloFunction: defineFunction({
-    entry: './amplify/functions/myFunction.ts',
+    entry: './functions/myFunction.ts',
   }),
 });
