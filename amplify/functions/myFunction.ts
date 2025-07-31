@@ -1,14 +1,32 @@
-import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, PutItemCommand, ListTablesCommand } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { Context } from 'aws-lambda';
 
-// Replace with your actual table name (see below)
-const TABLE_NAME = process.env.TABLE_NAME!;
-
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const dynamoClient = new DynamoDBClient({});
+
+// Function to find the actual table name
+async function findTableName(prefix: string): Promise<string> {
+  const listTablesCommand = new ListTablesCommand({});
+  const result = await dynamoClient.send(listTablesCommand);
+  
+  const matchingTable = result.TableNames?.find(tableName => 
+    tableName.startsWith(prefix)
+  );
+  
+  if (!matchingTable) {
+    throw new Error(`No table found with prefix: ${prefix}`);
+  }
+  
+  return matchingTable;
+}
 
 export const handler = async (event: any, context: Context) => {
   try {
+    // Find the actual table name dynamically
+    const TABLE_NAME = await findTableName("Sandwich");
+    console.log(`Using table: ${TABLE_NAME}`);
+    
     const params = {
     TableName: TABLE_NAME,
     Item: {

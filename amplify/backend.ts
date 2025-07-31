@@ -8,16 +8,18 @@ export const backend = defineBackend({
   data,
   helloFunction: defineFunction({
     entry: './functions/myFunction.ts',
+    environment: {
+      TABLE_NAME: "Sandwich"
+    }
   }),
 });
-const sandwichTable = backend.data.resources.tables["Sandwich"];
-backend.helloFunction.addEnvironment("TABLE_NAME", sandwichTable.tableName);
 
-// Grant the function access to the Sandwich table
+// Grant the function access to all DynamoDB tables with Sandwich prefix
 backend.helloFunction.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: [
+      'dynamodb:ListTables',
       'dynamodb:GetItem',
       'dynamodb:PutItem',
       'dynamodb:UpdateItem',
@@ -25,6 +27,9 @@ backend.helloFunction.resources.lambda.addToRolePolicy(
       'dynamodb:Scan',
       'dynamodb:Query'
     ],
-    resources: [sandwichTable.tableArn]
+    resources: [
+      `arn:aws:dynamodb:*:*:table/Sandwich*`,
+      `arn:aws:dynamodb:*:*:table/*`
+    ]
   })
 );
