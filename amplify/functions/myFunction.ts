@@ -24,7 +24,7 @@ async function findTableName(prefix: string): Promise<string> {
 export const handler = async (event: any, context: Context) => {
   try {
     // Find the actual table name dynamically
-    const TABLE_NAME = await findTableName("Sandwich");
+    const TABLE_NAME = await findTableName(process.env.TABLE_NAME!);
     console.log(`Using table: ${TABLE_NAME}`);
     
     const params = {

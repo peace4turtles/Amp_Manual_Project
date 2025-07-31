@@ -14,12 +14,20 @@ export const backend = defineBackend({
   }),
 });
 
-// Grant the function access to all DynamoDB tables with Sandwich prefix
+// Grant the function access to list tables (account level)
+backend.helloFunction.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: ['dynamodb:ListTables'],
+    resources: ['*']
+  })
+);
+
+// Grant the function access to Sandwich tables specifically
 backend.helloFunction.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: [
-      'dynamodb:ListTables',
       'dynamodb:GetItem',
       'dynamodb:PutItem',
       'dynamodb:UpdateItem',
@@ -27,9 +35,6 @@ backend.helloFunction.resources.lambda.addToRolePolicy(
       'dynamodb:Scan',
       'dynamodb:Query'
     ],
-    resources: [
-      `arn:aws:dynamodb:*:*:table/Sandwich*`,
-      `arn:aws:dynamodb:*:*:table/*`
-    ]
+    resources: [`arn:aws:dynamodb:*:*:table/Sandwich*`]
   })
 );
