@@ -3,14 +3,14 @@ import { DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { Context } from 'aws-lambda';
 
 // Replace with your actual table name (see below)
-const TABLE_NAME = process.env.SANDWICH_TABLE_NAME!;
+const TABLE_NAME = process.env.TABLE_NAME!;
 
 const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
 export const handler = async (event: any, context: Context) => {
   try {
     const params = {
-    TableName: "Sandwich",
+    TableName: TABLE_NAME,
     Item: {
       id: { S: "1" },
       name: { S: "Ice cream" },

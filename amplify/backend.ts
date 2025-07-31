@@ -12,7 +12,7 @@ export const backend = defineBackend({
   helloFunction: defineFunction({
     entry: './functions/myFunction.ts',
     environment: {
-      SANDWICH_TABLE_NAME: "Sandwich",
+      TABLE_NAME: "Sandwich-rldvnrxg3rbodhzakjlfddvm2m-NONE",
     }
   }),
 });
@@ -29,6 +29,6 @@ backend.helloFunction.resources.lambda.addToRolePolicy(
       'dynamodb:Scan',
       'dynamodb:Query'
     ],
-    resources: [`arn:aws:dynamodb:*:*:table/Sandwich*`]
+    resources: [`arn:aws:dynamodb:us-east-2:163708692240:table/Sandwich-rldvnrxg3rbodhzakjlfddvm2m-NONE`]
   })
 );
