@@ -26,17 +26,37 @@ export const handler = async (event: any, context: Context) => {
     // Find the actual table name dynamically
     const TABLE_NAME = await findTableName(process.env.TABLE_NAME!);
     console.log(`Using table: ${TABLE_NAME}`);
-    
-    const params = {
+        
+    const params1 = {
     TableName: TABLE_NAME,
     Item: {
-      id: { S: "1" },
-      name: { S: "Ice cream" },
-      cost: { N: "1.00" }
-        }
+        id: { S: "1" },
+        name: { S: "Ice cream" },
+        cost: { N: "1.00" }
+    }
     };
 
-    await client.send(new PutItemCommand(params));
+    const params2 = {
+    TableName: TABLE_NAME,
+    Item: {
+        id: { S: "2" },
+        name: { S: "Turkey Sandwich" },
+        cost: { N: "5.99" }
+    }
+    };
+
+    const params3 = {
+    TableName: TABLE_NAME,
+    Item: {
+        id: { S: "3" },
+        name: { S: "Ham and Cheese" },
+        cost: { N: "4.50" }
+    }
+    };
+
+    await client.send(new PutItemCommand(params1));
+    await client.send(new PutItemCommand(params2));
+    await client.send(new PutItemCommand(params3));
     console.log("Dummy data inserted");
 
     const result = await client.send(new ScanCommand({ TableName: TABLE_NAME }));
