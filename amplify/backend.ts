@@ -98,6 +98,16 @@ booksPath.addMethod("GET", lambdaIntegration, {
   authorizer: cognitoAuth,
 });
 
+// Add public endpoint (no authentication required)
+const publicItems = myRestApi.root.addResource("public");
+publicItems.addMethod("GET", lambdaIntegration, {
+  authorizationType: AuthorizationType.NONE, // No auth required
+});
+
+publicItems.addMethod("POST", lambdaIntegration, {
+  authorizationType: AuthorizationType.NONE, // No auth required
+});
+
 // create a new IAM policy to allow Invoke access to the API
 const apiRestPolicy = new Policy(apiStack, "RestApiPolicy", {
   statements: [
