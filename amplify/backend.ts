@@ -64,7 +64,7 @@ const myRestApi = new RestApi(apiStack, "RestApi", {
 });
 
 const lambdaIntegration = new LambdaIntegration(
-  backend.myAPIFunction.resources.lambda
+  backend.helloFunction.resources.lambda
 );
 
 // create a new resource path with IAM authorization
