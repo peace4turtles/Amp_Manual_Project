@@ -11,6 +11,7 @@ import {
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
 import { myAPIFunction } from './functions/api-function.js/resource';
+import { storage } from './storage/resource';
 
 export const backend = defineBackend({
   auth,
@@ -22,6 +23,7 @@ export const backend = defineBackend({
       TABLE_NAME: "Sandwich"
     }
   }),
+  storage
 });
 
 backend.helloFunction.resources.lambda.addToRolePolicy(
