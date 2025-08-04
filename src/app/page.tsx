@@ -1,9 +1,27 @@
+'use client';
+
+
 import Image from "next/image";
+import { Authenticator } from '@aws-amplify/ui-react';
+import { Amplify } from 'aws-amplify';
+import '@aws-amplify/ui-react/styles.css';
+import outputs from "../../amplify_outputs.json";
+
+Amplify.configure(outputs);
 
 export default function Home() {
   return (
+    <Authenticator>
+      {({ signOut, user }) => (
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+          <h1 className="text-xl font-semibold">Hello, {user?.username}</h1>
+            <button
+              onClick={signOut}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+            >
+              Sign out
+            </button>
         <Image
           className="dark:invert"
           src="/next.svg"
@@ -12,6 +30,12 @@ export default function Home() {
           height={38}
           priority
         />
+        <Image
+          src="https://amplify-d335597a80fxjy-ma-amplifyteamdrivebucket28-i47hjvvkemxz.s3.us-east-2.amazonaws.com/RSNATestLogo.png"
+          alt="RSNA Logo"
+          width={180}
+          height={38}
+          priority />
         <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
           <li className="mb-2 tracking-[-.01em]">
             Get started by editing{" "}
@@ -99,5 +123,7 @@ export default function Home() {
         </a>
       </footer>
     </div>
+     )}
+    </Authenticator>
   );
 }
