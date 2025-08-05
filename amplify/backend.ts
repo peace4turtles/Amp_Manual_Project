@@ -111,11 +111,29 @@ publicItems.addCorsPreflight({
   allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 });
 
+items.addCorsPreflight({
+  allowOrigins: ['*'], // or specify your frontend URL like ['http://localhost:3000']
+  allowMethods: ['GET', 'POST', 'OPTIONS'], // Include all methods you're using
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+});
+
 publicItems.addMethod("POST", lambdaIntegration, {
   authorizationType: AuthorizationType.NONE, // No auth required
 });
 
 publicItems.addMethod("GET", lambdaIntegration, {
+    authorizationType: AuthorizationType.NONE,
+  methodResponses: [{
+    statusCode: '200',
+    responseParameters: {
+      'method.response.header.Access-Control-Allow-Origin': true,
+      'method.response.header.Access-Control-Allow-Headers': true,
+      'method.response.header.Access-Control-Allow-Methods': true,
+    },
+  }],
+});
+
+items.addMethod("GET", lambdaIntegration, {
     authorizationType: AuthorizationType.NONE,
   methodResponses: [{
     statusCode: '200',
