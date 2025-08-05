@@ -78,6 +78,14 @@ const items = myRestApi.root.addResource("items");
 items.addMethod("GET", lambdaIntegration, {
   authorizationType: AuthorizationType.COGNITO,
   authorizer: cognitoAuthorizer,
+  methodResponses: [{
+  statusCode: '200',
+  responseParameters: {
+    'method.response.header.Access-Control-Allow-Origin': true,
+    'method.response.header.Access-Control-Allow-Headers': true,
+    'method.response.header.Access-Control-Allow-Methods': true,
+    },
+  }],
 });
 items.addMethod("POST", lambdaIntegration, {
   authorizationType: AuthorizationType.COGNITO,
@@ -101,9 +109,6 @@ items.addProxy({
 
 // Add public endpoint (no authentication required)
 const publicItems = myRestApi.root.addResource("public");
-// publicItems.addMethod("GET", lambdaIntegration, {
-//   authorizationType: AuthorizationType.NONE, // No auth required
-// });
 
 publicItems.addCorsPreflight({
   allowOrigins: ['*'], // or specify your frontend URL like ['http://localhost:3000']
@@ -122,18 +127,6 @@ publicItems.addMethod("POST", lambdaIntegration, {
 });
 
 publicItems.addMethod("GET", lambdaIntegration, {
-    authorizationType: AuthorizationType.NONE,
-  methodResponses: [{
-    statusCode: '200',
-    responseParameters: {
-      'method.response.header.Access-Control-Allow-Origin': true,
-      'method.response.header.Access-Control-Allow-Headers': true,
-      'method.response.header.Access-Control-Allow-Methods': true,
-    },
-  }],
-});
-
-items.addMethod("GET", lambdaIntegration, {
     authorizationType: AuthorizationType.NONE,
   methodResponses: [{
     statusCode: '200',
