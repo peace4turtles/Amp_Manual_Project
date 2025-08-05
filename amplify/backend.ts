@@ -58,56 +58,73 @@ const myRestApi = new RestApi(apiStack, "RestApi", {
   deployOptions: {
     stageName: "dev",
   },
-  defaultCorsPreflightOptions: {
-    allowOrigins: Cors.ALL_ORIGINS, // Restrict this to domains you trust
-    allowMethods: Cors.ALL_METHODS, // Specify only the methods you need to allow
-    allowHeaders: Cors.DEFAULT_HEADERS, // Specify only the headers you need to allow
-  },
+  // defaultCorsPreflightOptions: {
+  //   allowOrigins: Cors.ALL_ORIGINS, // Restrict this to domains you trust
+  //   allowMethods: Cors.ALL_METHODS, // Specify only the methods you need to allow
+  //   allowHeaders: Cors.DEFAULT_HEADERS, // Specify only the headers you need to allow
+  // },
 });
 
 const lambdaIntegration = new LambdaIntegration(
   backend.helloFunction.resources.lambda
 );
 
-// create a new resource path with IAM authorization
-const itemsPath = myRestApi.root.addResource("items", {
-  defaultMethodOptions: {
-    authorizationType: AuthorizationType.IAM,
-  },
+const cognitoAuthorizer = new CognitoUserPoolsAuthorizer(apiStack, 'CognitoAuthorizer', {
+  cognitoUserPools: [backend.auth.resources.userPool],
 });
 
-// add methods you would like to create to the resource path
-itemsPath.addMethod("GET", lambdaIntegration);
-itemsPath.addMethod("POST", lambdaIntegration);
-itemsPath.addMethod("DELETE", lambdaIntegration);
-itemsPath.addMethod("PUT", lambdaIntegration);
+// create a new resource path with IAM authorization
+const items = myRestApi.root.addResource("items");
+items.addMethod("GET", lambdaIntegration, {
+  authorizationType: AuthorizationType.COGNITO,
+  authorizer: cognitoAuthorizer,
+});
+items.addMethod("POST", lambdaIntegration, {
+  authorizationType: AuthorizationType.COGNITO,
+  authorizer: cognitoAuthorizer,
+});
+items.addMethod("DELETE", lambdaIntegration, {
+  authorizationType: AuthorizationType.COGNITO,
+  authorizer: cognitoAuthorizer,
+});
+items.addMethod("PUT", lambdaIntegration, {
+  authorizationType: AuthorizationType.COGNITO,
+  authorizer: cognitoAuthorizer,
+});
 
 // add a proxy resource path to the API
-itemsPath.addProxy({
+items.addProxy({
   anyMethod: true,
   defaultIntegration: lambdaIntegration,
 });
 
-// create a new Cognito User Pools authorizer
-const cognitoAuth = new CognitoUserPoolsAuthorizer(apiStack, "CognitoAuth", {
-  cognitoUserPools: [backend.auth.resources.userPool],
-});
-
-// create a new resource path with Cognito authorization
-const booksPath = myRestApi.root.addResource("cognito-auth-path");
-booksPath.addMethod("GET", lambdaIntegration, {
-  authorizationType: AuthorizationType.COGNITO,
-  authorizer: cognitoAuth,
-});
 
 // Add public endpoint (no authentication required)
 const publicItems = myRestApi.root.addResource("public");
-publicItems.addMethod("GET", lambdaIntegration, {
-  authorizationType: AuthorizationType.NONE, // No auth required
+// publicItems.addMethod("GET", lambdaIntegration, {
+//   authorizationType: AuthorizationType.NONE, // No auth required
+// });
+
+publicItems.addCorsPreflight({
+  allowOrigins: ['*'], // or specify your frontend URL like ['http://localhost:3000']
+  allowMethods: ['GET', 'POST', 'OPTIONS'], // Include all methods you're using
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 });
 
 publicItems.addMethod("POST", lambdaIntegration, {
   authorizationType: AuthorizationType.NONE, // No auth required
+});
+
+publicItems.addMethod("GET", lambdaIntegration, {
+    authorizationType: AuthorizationType.NONE,
+  methodResponses: [{
+    statusCode: '200',
+    responseParameters: {
+      'method.response.header.Access-Control-Allow-Origin': true,
+      'method.response.header.Access-Control-Allow-Headers': true,
+      'method.response.header.Access-Control-Allow-Methods': true,
+    },
+  }],
 });
 
 // create a new IAM policy to allow Invoke access to the API

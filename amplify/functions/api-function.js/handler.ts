@@ -6,8 +6,10 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     statusCode: 200,
     // Modify the CORS settings below to match your specific requirements
     headers: {
-      "Access-Control-Allow-Origin": "*", // Restrict this to domains you trust
-      "Access-Control-Allow-Headers": "*", // Specify only the headers you need to allow
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify("Hello from myFunction!"),
   };

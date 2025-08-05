@@ -1,6 +1,6 @@
 'use client';
 
-
+import React, { useState, useEffect } from 'react';
 import Image from "next/image";
 import { Authenticator } from '@aws-amplify/ui-react';
 import { Amplify } from 'aws-amplify';
@@ -10,6 +10,24 @@ import outputs from "../../amplify_outputs.json";
 Amplify.configure(outputs);
 
 export default function Home() {
+  const [items, setItems] = useState([]);
+  const [rawData, setRawData] = useState(null);
+
+  useEffect(() => {
+    fetch('https://b54uzz1ot0.execute-api.us-east-2.amazonaws.com/dev/public')
+      .then(res => res.json())
+      .then(data => {
+        console.log('Raw API response:', data); // Debug log
+        setRawData(data); // Show raw data
+        setItems(data.Items || data);
+      })
+      .catch(err => {
+        console.error('Fetch error:', err);
+      });
+  }, []);
+
+
+
   return (
     <Authenticator>
       {({ signOut, user }) => (
@@ -73,6 +91,14 @@ export default function Home() {
           >
             Read our docs
           </a>
+        </div>
+        <div>
+          <h1>Items</h1>
+          {items.map((item, i) => (
+            <div key={i}>
+              <pre>{JSON.stringify(item, null, 2)}</pre>
+            </div>
+          ))}
         </div>
       </main>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">

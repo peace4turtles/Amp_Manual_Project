@@ -64,6 +64,12 @@ export const handler = async (event: any, context: Context) => {
 
     return {
       statusCode: 200,
+      headers: {
+      'Access-Control-Allow-Origin': '*', // or 'http://localhost:3000'
+      'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Requested-With',
+      'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+      'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ sandwiches: result.Items }),
     };
   } catch (error) {
