@@ -75,6 +75,13 @@ const cognitoAuthorizer = new CognitoUserPoolsAuthorizer(apiStack, 'CognitoAutho
 
 // create a new resource path with IAM authorization
 const items = myRestApi.root.addResource("items");
+
+items.addCorsPreflight({
+  allowOrigins: ['*'],
+  allowMethods: ['GET', 'POST', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+});
+
 items.addMethod("GET", lambdaIntegration, {
   authorizationType: AuthorizationType.COGNITO,
   authorizer: cognitoAuthorizer,
@@ -87,6 +94,7 @@ items.addMethod("GET", lambdaIntegration, {
     },
   }],
 });
+
 items.addMethod("POST", lambdaIntegration, {
   authorizationType: AuthorizationType.COGNITO,
   authorizer: cognitoAuthorizer,
@@ -111,16 +119,11 @@ items.addProxy({
 const publicItems = myRestApi.root.addResource("public");
 
 publicItems.addCorsPreflight({
-  allowOrigins: ['*'], // or specify your frontend URL like ['http://localhost:3000']
-  allowMethods: ['GET', 'POST', 'OPTIONS'], // Include all methods you're using
+  allowOrigins: ['*'],
+  allowMethods: ['GET', 'POST', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 });
 
-items.addCorsPreflight({
-  allowOrigins: ['*'], // or specify your frontend URL like ['http://localhost:3000']
-  allowMethods: ['GET', 'POST', 'OPTIONS'], // Include all methods you're using
-  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-});
 
 publicItems.addMethod("POST", lambdaIntegration, {
   authorizationType: AuthorizationType.NONE, // No auth required
