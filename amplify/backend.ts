@@ -8,7 +8,6 @@ import {
   CognitoUserPoolsAuthorizer,
   LambdaIntegration,
   RestApi,
-  Cors
 } from "aws-cdk-lib/aws-apigateway";
 import { myAPIFunction } from './functions/api-function.js/resource';
 import { storage } from './storage/resource';
@@ -49,20 +48,13 @@ backend.helloFunction.resources.lambda.addToRolePolicy(
   })
 );
 
-// create a new API stack
 const apiStack = backend.createStack("api-stack");
 
-// Remove defaultCorsPreflightOptions - this is causing the conflict
 const myRestApi = new RestApi(apiStack, "RestApi", {
   restApiName: "myRestApi",
   deploy: true,
   deployOptions: {
     stageName: "dev",
-  },
-    defaultCorsPreflightOptions: {
-    allowOrigins: Cors.ALL_ORIGINS, // Restrict this to domains you trust
-    allowMethods: Cors.ALL_METHODS, // Specify only the methods you need to allow
-    allowHeaders: Cors.DEFAULT_HEADERS, // Specify only the headers you need to allow
   },
 });
 
@@ -74,35 +66,47 @@ const cognitoAuthorizer = new CognitoUserPoolsAuthorizer(apiStack, 'CognitoAutho
   cognitoUserPools: [backend.auth.resources.userPool],
 });
 
-// create items resource
-const items = myRestApi.root.addResource("items", {
-  defaultMethodOptions: {
-    authorizationType: AuthorizationType.COGNITO,
-  },
+const items = myRestApi.root.addResource("items");
+
+items.addCorsPreflight({
+  allowOrigins: ['*'],
+  allowMethods: ['GET', 'POST', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 });
 
-// Add GET method for items
 items.addMethod("GET", lambdaIntegration, {
   authorizationType: AuthorizationType.COGNITO,
   authorizer: cognitoAuthorizer,
+  methodResponses: [{
+    statusCode: '200',
+    responseParameters: {
+      'method.response.header.Access-Control-Allow-Origin': true,
+      'method.response.header.Access-Control-Allow-Headers': true,
+      'method.response.header.Access-Control-Allow-Methods': true,
+    },
+  }],
 });
 
-// create public resource  
 const publicItems = myRestApi.root.addResource("public");
 
-// Add CORS preflight for public
-// publicItems.addCorsPreflight({
-//   allowOrigins: ['*'],
-//   allowMethods: ['GET', 'POST', 'OPTIONS'],
-//   allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-// });
-
-// Add GET method for public
-publicItems.addMethod("GET", lambdaIntegration, {
-  authorizationType: AuthorizationType.NONE,
+publicItems.addCorsPreflight({
+  allowOrigins: ['*'],
+  allowMethods: ['GET', 'POST', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 });
 
-// create IAM policy
+publicItems.addMethod("GET", lambdaIntegration, {
+  authorizationType: AuthorizationType.NONE,
+  methodResponses: [{
+    statusCode: '200',
+    responseParameters: {
+      'method.response.header.Access-Control-Allow-Origin': true,
+      'method.response.header.Access-Control-Allow-Headers': true,
+      'method.response.header.Access-Control-Allow-Methods': true,
+    },
+  }],
+});
+
 const apiRestPolicy = new Policy(apiStack, "RestApiPolicy", {
   statements: [
     new PolicyStatement({
@@ -115,11 +119,9 @@ const apiRestPolicy = new Policy(apiStack, "RestApiPolicy", {
   ],
 });
 
-// attach policy to roles
 backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(apiRestPolicy);
 backend.auth.resources.unauthenticatedUserIamRole.attachInlinePolicy(apiRestPolicy);
 
-// add outputs
 backend.addOutput({
   custom: {
     API: {
