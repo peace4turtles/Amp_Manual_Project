@@ -6,7 +6,6 @@ import { data } from './data/resource';
 import {
   AuthorizationType,
   CognitoUserPoolsAuthorizer,
-  Cors,
   LambdaIntegration,
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
@@ -52,17 +51,13 @@ backend.helloFunction.resources.lambda.addToRolePolicy(
 // create a new API stack
 const apiStack = backend.createStack("api-stack");
 
+// Remove defaultCorsPreflightOptions - this is causing the conflict
 const myRestApi = new RestApi(apiStack, "RestApi", {
   restApiName: "myRestApi",
   deploy: true,
   deployOptions: {
     stageName: "dev",
   },
-  // defaultCorsPreflightOptions: {
-  //   allowOrigins: Cors.ALL_ORIGINS, // Restrict this to domains you trust
-  //   allowMethods: Cors.ALL_METHODS, // Specify only the methods you need to allow
-  //   allowHeaders: Cors.DEFAULT_HEADERS, // Specify only the headers you need to allow
-  // },
 });
 
 const lambdaIntegration = new LambdaIntegration(
@@ -73,97 +68,55 @@ const cognitoAuthorizer = new CognitoUserPoolsAuthorizer(apiStack, 'CognitoAutho
   cognitoUserPools: [backend.auth.resources.userPool],
 });
 
-// create a new resource path with IAM authorization
+// create items resource
 const items = myRestApi.root.addResource("items");
 
+// Add CORS preflight for items
 items.addCorsPreflight({
   allowOrigins: ['*'],
   allowMethods: ['GET', 'POST', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 });
 
+// Add GET method for items
 items.addMethod("GET", lambdaIntegration, {
   authorizationType: AuthorizationType.COGNITO,
   authorizer: cognitoAuthorizer,
-  methodResponses: [{
-  statusCode: '200',
-  responseParameters: {
-    'method.response.header.Access-Control-Allow-Origin': true,
-    'method.response.header.Access-Control-Allow-Headers': true,
-    'method.response.header.Access-Control-Allow-Methods': true,
-    },
-  }],
 });
 
-items.addMethod("POST", lambdaIntegration, {
-  authorizationType: AuthorizationType.COGNITO,
-  authorizer: cognitoAuthorizer,
-});
-items.addMethod("DELETE", lambdaIntegration, {
-  authorizationType: AuthorizationType.COGNITO,
-  authorizer: cognitoAuthorizer,
-});
-items.addMethod("PUT", lambdaIntegration, {
-  authorizationType: AuthorizationType.COGNITO,
-  authorizer: cognitoAuthorizer,
-});
-
-// add a proxy resource path to the API
-items.addProxy({
-  anyMethod: true,
-  defaultIntegration: lambdaIntegration,
-});
-
-
-// Add public endpoint (no authentication required)
+// create public resource  
 const publicItems = myRestApi.root.addResource("public");
 
+// Add CORS preflight for public
 publicItems.addCorsPreflight({
   allowOrigins: ['*'],
   allowMethods: ['GET', 'POST', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 });
 
-
-publicItems.addMethod("POST", lambdaIntegration, {
-  authorizationType: AuthorizationType.NONE, // No auth required
-});
-
+// Add GET method for public
 publicItems.addMethod("GET", lambdaIntegration, {
-    authorizationType: AuthorizationType.NONE,
-  methodResponses: [{
-    statusCode: '200',
-    responseParameters: {
-      'method.response.header.Access-Control-Allow-Origin': true,
-      'method.response.header.Access-Control-Allow-Headers': true,
-      'method.response.header.Access-Control-Allow-Methods': true,
-    },
-  }],
+  authorizationType: AuthorizationType.NONE,
 });
 
-// create a new IAM policy to allow Invoke access to the API
+// create IAM policy
 const apiRestPolicy = new Policy(apiStack, "RestApiPolicy", {
   statements: [
     new PolicyStatement({
       actions: ["execute-api:Invoke"],
       resources: [
         `${myRestApi.arnForExecuteApi("*", "/items", "dev")}`,
-        `${myRestApi.arnForExecuteApi("*", "/items/*", "dev")}`,
-        `${myRestApi.arnForExecuteApi("*", "/cognito-auth-path", "dev")}`,
+        `${myRestApi.arnForExecuteApi("*", "/public", "dev")}`,
       ],
     }),
   ],
 });
 
-// attach the policy to the authenticated and unauthenticated IAM roles
-backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(
-  apiRestPolicy
-);
-backend.auth.resources.unauthenticatedUserIamRole.attachInlinePolicy(
-  apiRestPolicy
-);
+// attach policy to roles
+backend.auth.resources.authenticatedUserIamRole.attachInlinePolicy(apiRestPolicy);
+backend.auth.resources.unauthenticatedUserIamRole.attachInlinePolicy(apiRestPolicy);
 
-// add outputs to the configuration file
+// add outputs
 backend.addOutput({
   custom: {
     API: {
