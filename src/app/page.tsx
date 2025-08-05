@@ -94,7 +94,7 @@ export default function Home() {
         </div>
         <div>
           <h1>Items</h1>
-          {items.map((item, i) => (
+          {items && Array.isArray(items) && items.map((item, i) => (
             <div key={i}>
               <pre>{JSON.stringify(item, null, 2)}</pre>
             </div>
