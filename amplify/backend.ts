@@ -8,6 +8,7 @@ import {
   CognitoUserPoolsAuthorizer,
   LambdaIntegration,
   RestApi,
+  Cors
 } from "aws-cdk-lib/aws-apigateway";
 import { myAPIFunction } from './functions/api-function.js/resource';
 import { storage } from './storage/resource';
@@ -58,6 +59,11 @@ const myRestApi = new RestApi(apiStack, "RestApi", {
   deployOptions: {
     stageName: "dev",
   },
+    defaultCorsPreflightOptions: {
+    allowOrigins: Cors.ALL_ORIGINS, // Restrict this to domains you trust
+    allowMethods: Cors.ALL_METHODS, // Specify only the methods you need to allow
+    allowHeaders: Cors.DEFAULT_HEADERS, // Specify only the headers you need to allow
+  },
 });
 
 const lambdaIntegration = new LambdaIntegration(
@@ -69,13 +75,10 @@ const cognitoAuthorizer = new CognitoUserPoolsAuthorizer(apiStack, 'CognitoAutho
 });
 
 // create items resource
-const items = myRestApi.root.addResource("items");
-
-// Add CORS preflight for items
-items.addCorsPreflight({
-  allowOrigins: ['*'],
-  allowMethods: ['GET', 'POST', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+const items = myRestApi.root.addResource("items", {
+  defaultMethodOptions: {
+    authorizationType: AuthorizationType.COGNITO,
+  },
 });
 
 // Add GET method for items
@@ -88,11 +91,11 @@ items.addMethod("GET", lambdaIntegration, {
 const publicItems = myRestApi.root.addResource("public");
 
 // Add CORS preflight for public
-publicItems.addCorsPreflight({
-  allowOrigins: ['*'],
-  allowMethods: ['GET', 'POST', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-});
+// publicItems.addCorsPreflight({
+//   allowOrigins: ['*'],
+//   allowMethods: ['GET', 'POST', 'OPTIONS'],
+//   allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+// });
 
 // Add GET method for public
 publicItems.addMethod("GET", lambdaIntegration, {
