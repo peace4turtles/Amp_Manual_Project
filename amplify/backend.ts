@@ -83,7 +83,7 @@ const lambdaIntegration = new LambdaIntegration(
 // create a new resource path with IAM authorization
 const itemsPath = myRestApi.root.addResource("items", {
   defaultMethodOptions: {
-    authorizationType: AuthorizationType.IAM,
+    authorizationType: AuthorizationType.COGNITO,
   },
 });
 
