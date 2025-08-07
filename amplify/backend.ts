@@ -81,35 +81,37 @@ const lambdaIntegration = new LambdaIntegration(
   backend.helloFunction.resources.lambda
 );
 
-// // create a new Cognito User Pools authorizer
-// const cognitoAuth = new CognitoUserPoolsAuthorizer(apiStack, "CognitoAuth", {
-//   cognitoUserPools: [backend.auth.resources.userPool],
-// });
+const userPool = new cognito.UserPool(apiStack, 'UserPool', {
+  selfSignUpEnabled: true,
+  signInAliases: {
+    email: true
+  },
+  lambdaTriggers: {
+    postConfirmation: backend.helloFunction.resources.lambda
+  }
+})
 
-  const userPool = new cognito.UserPool(apiStack, 'UserPool', {
-    selfSignUpEnabled: true,
-    signInAliases: {
-      email: true
-    },
-    lambdaTriggers: {
-      postConfirmation: backend.helloFunction.resources.lambda
-    }
-  })
+// create a new Cognito User Pools authorizer
+const cognitoAuth = new CognitoUserPoolsAuthorizer(apiStack, "CognitoAuth", {
+  cognitoUserPools: [userPool], // Use the userPool you created below instead of backend.auth.resources.userPool
+});
 
-  const userPoolClient = userPool.addClient('UserPoolClient', {
-    authFlows: {
-      userPassword: true,
-      userSrp: true
-    },
-    accessTokenValidity: Duration.days(1),
-    idTokenValidity: Duration.days(1),
-    refreshTokenValidity: Duration.days(30)
-  })
 
+
+const userPoolClient = userPool.addClient('UserPoolClient', {
+  authFlows: {
+    userPassword: true,
+    userSrp: true
+  },
+  accessTokenValidity: Duration.days(1),
+  idTokenValidity: Duration.days(1),
+  refreshTokenValidity: Duration.days(30)
+})
 
 const itemsPath = myRestApi.root.addResource("items", {
   defaultMethodOptions: {
     authorizationType: AuthorizationType.COGNITO,
+    authorizer: cognitoAuth, // Add this line to reference the authorizer
   },
 });
 
@@ -123,13 +125,17 @@ itemsPath.addMethod("PUT", lambdaIntegration);
 itemsPath.addProxy({
   anyMethod: true,
   defaultIntegration: lambdaIntegration,
+  defaultMethodOptions: {
+    authorizationType: AuthorizationType.COGNITO,
+    authorizer: cognitoAuth, // Add this line
+  },
 });
-
 
 // create a new resource path with Cognito authorization
 const booksPath = myRestApi.root.addResource("cognito-auth-path");
 booksPath.addMethod("GET", lambdaIntegration, {
   authorizationType: AuthorizationType.COGNITO,
+  authorizer: cognitoAuth, // Add this line
 });
 
 // create a new IAM policy to allow Invoke access to the API
