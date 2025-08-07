@@ -1,6 +1,6 @@
 import { defineBackend, defineFunction } from '@aws-amplify/backend';
 import { Effect, PolicyStatement, Policy } from 'aws-cdk-lib/aws-iam';
-import { Stack } from "aws-cdk-lib";
+import { Stack, Duration } from "aws-cdk-lib";
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 import {
@@ -12,6 +12,7 @@ import {
 } from "aws-cdk-lib/aws-apigateway";
 import { myAPIFunction } from './functions/api-function.js/resource';
 import { storage } from './storage/resource';
+import * as cognito from 'aws-cdk-lib/aws-cognito'
 
 export const backend = defineBackend({
   auth,
@@ -49,7 +50,7 @@ backend.helloFunction.resources.lambda.addToRolePolicy(
   })
 );
 
-const apiStack = backend.createStack("api-stack");
+const apiStack = backend.createStack("api-stack-");
 
 // const myRestApi = new RestApi(apiStack, "RestApi", {
 //   restApiName: "myRestApi",
@@ -63,7 +64,7 @@ const apiStack = backend.createStack("api-stack");
 
 // create a new REST API
 const myRestApi = new RestApi(apiStack, "RestApi", {
-  restApiName: "myRestApi",
+  restApiName: "api-stack-EXPERIMENT",
   deploy: true,
   deployOptions: {
     stageName: "dev",
@@ -80,7 +81,32 @@ const lambdaIntegration = new LambdaIntegration(
   backend.helloFunction.resources.lambda
 );
 
-// create a new resource path with IAM authorization
+// // create a new Cognito User Pools authorizer
+// const cognitoAuth = new CognitoUserPoolsAuthorizer(apiStack, "CognitoAuth", {
+//   cognitoUserPools: [backend.auth.resources.userPool],
+// });
+
+  const userPool = new cognito.UserPool(apiStack, 'UserPool', {
+    selfSignUpEnabled: true,
+    signInAliases: {
+      email: true
+    },
+    lambdaTriggers: {
+      postConfirmation: backend.helloFunction.resources.lambda
+    }
+  })
+
+  const userPoolClient = userPool.addClient('UserPoolClient', {
+    authFlows: {
+      userPassword: true,
+      userSrp: true
+    },
+    accessTokenValidity: Duration.days(1),
+    idTokenValidity: Duration.days(1),
+    refreshTokenValidity: Duration.days(30)
+  })
+
+
 const itemsPath = myRestApi.root.addResource("items", {
   defaultMethodOptions: {
     authorizationType: AuthorizationType.COGNITO,
@@ -99,10 +125,6 @@ itemsPath.addProxy({
   defaultIntegration: lambdaIntegration,
 });
 
-// create a new Cognito User Pools authorizer
-const cognitoAuth = new CognitoUserPoolsAuthorizer(apiStack, "CognitoAuth", {
-  cognitoUserPools: [backend.auth.resources.userPool],
-});
 
 // create a new resource path with Cognito authorization
 const booksPath = myRestApi.root.addResource("cognito-auth-path");

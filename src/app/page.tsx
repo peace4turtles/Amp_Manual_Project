@@ -6,27 +6,105 @@ import { Authenticator } from '@aws-amplify/ui-react';
 import { Amplify } from 'aws-amplify';
 import '@aws-amplify/ui-react/styles.css';
 import outputs from "../../amplify_outputs.json";
+import { fetchAuthSession } from '@aws-amplify/core';
+import { parseAmplifyConfig } from "aws-amplify/utils";
 
-Amplify.configure(outputs);
+const amplifyConfig = parseAmplifyConfig(outputs);
+Amplify.configure(
+  {
+    ...amplifyConfig,
+    API: {
+      ...amplifyConfig.API,
+      REST: outputs.custom.API,
+    },
+    // Auth: {
+    //   Cognito: {
+    //     userPoolId: env.cognitoUserPoolId || '',
+    //     userPoolClientId: env.cognitoUserPoolWebClientId || '',
+    //   }
+    // },
+  },
+  {
+    API: {
+      REST: {
+        retryStrategy: {
+          strategy: 'no-retry', // Overrides default retry strategy
+        },
+      }
+    }
+  },
+);
 
 export default function Home() {
   const [items, setItems] = useState([]);
   const [rawData, setRawData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // useEffect(() => {
+  //   fetch('https://b54uzz1ot0.execute-api.us-east-2.amazonaws.com/dev/public')
+  //     .then(res => res.json())
+  //     .then(data => {
+  //       console.log('Raw API response:', data);
+  //       setRawData(data);
+  //       setItems(data.Items || data || []);
+  //       setLoading(false);
+  //     })
+  //     .catch(err => {
+  //       console.error('Fetch error:', err);
+  //       setLoading(false);
+  //     });
+  // }, []);
 
   useEffect(() => {
-    fetch('https://b54uzz1ot0.execute-api.us-east-2.amazonaws.com/dev/public')
-      .then(res => res.json())
-      .then(data => {
-        console.log('Raw API response:', data); // Debug log
-        setRawData(data); // Show raw data
-        setItems(data.Items || data);
-      })
-      .catch(err => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        const session = await fetchAuthSession();
+        const accessToken = session.tokens?.accessToken?.toString();
+        const idToken = session.tokens?.idToken?.toString();
+        
+        console.log('Session:', session);
+        console.log('Access Token exists:', !!accessToken);
+        console.log('ID Token exists:', !!idToken);
+        console.log('Token', accessToken);
+
+        if (session.tokens) {
+          console.log('User is authenticated');
+          
+          if (accessToken) {
+              const tokenPayload = JSON.parse(atob(accessToken.split('.')[1]));
+              const currentTime = Math.floor(Date.now() / 1000);
+              const isExpired = tokenPayload.exp < currentTime;
+              
+              console.log('Token payload:', tokenPayload);
+              console.log('Token expires at:', new Date(tokenPayload.exp * 1000));
+              console.log('Current time:', new Date(currentTime * 1000));
+              console.log('Is token expired:', isExpired);
+          }
+        }
+
+        const response = await fetch('https://b54uzz1ot0.execute-api.us-east-2.amazonaws.com/dev/cognito-auth-path', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+        console.log('Raw API response:', data);
+        setRawData(data);
+        setItems(data.Items || data || []);
+      } catch (err) {
         console.error('Fetch error:', err);
-      });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
-
-
 
   return (
     <Authenticator>
@@ -92,14 +170,8 @@ export default function Home() {
             Read our docs
           </a>
         </div>
-        <div>
-          <h1>Items</h1>
-          {items && Array.isArray(items) && items.map((item, i) => (
-            <div key={i}>
-              <pre>{JSON.stringify(item, null, 2)}</pre>
-            </div>
-          ))}
-        </div>
+            Items: 
+            {items ? JSON.stringify(items, null, 2) : 'null'}{'\n'}
       </main>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
         <a
