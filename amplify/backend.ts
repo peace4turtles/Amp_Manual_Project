@@ -130,7 +130,6 @@ itemsPath.addProxy({
 const booksPath = myRestApi.root.addResource("cognito-auth-path");
 booksPath.addMethod("GET", lambdaIntegration, {
   authorizationType: AuthorizationType.COGNITO,
-  authorizer: cognitoAuth,
 });
 
 // create a new IAM policy to allow Invoke access to the API
