@@ -6,36 +6,38 @@ import { Authenticator } from '@aws-amplify/ui-react';
 import { Amplify } from 'aws-amplify';
 import '@aws-amplify/ui-react/styles.css';
 import outputs from "../../amplify_outputs.json";
-import { fetchAuthSession } from '@aws-amplify/core';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { parseAmplifyConfig } from "aws-amplify/utils";
+import { get } from 'aws-amplify/api';
 
 const amplifyConfig = parseAmplifyConfig(outputs);
-Amplify.configure({
-  Auth: {
-    Cognito: {
-      userPoolId: "us-east-2_6ZwxbaLGO",
-      userPoolClientId: "t02309fp0efqg5jnesnmbnudk",
-      identityPoolId: "us-east-2:1c25aa17-92f4-41c2-9a65-7d7ebbf5ac90",
-      loginWith: {
-        email: true,
-      },
-      signUpVerificationMethod: "code",
-      userAttributes: {
-        email: {
-          required: true,
-        },
-      },
-      allowGuestAccess: true,
-      passwordFormat: {
-        minLength: 8,
-        requireLowercase: true,
-        requireUppercase: true,
-        requireNumbers: true,
-        requireSpecialCharacters: true,
-      },
-    },
-  },
-})
+Amplify.configure(amplifyConfig)
+
+//   Auth: {
+//     Cognito: {
+//       userPoolId: "us-east-2_6ZwxbaLGO",
+//       userPoolClientId: "t02309fp0efqg5jnesnmbnudk",
+//       identityPoolId: "us-east-2:1c25aa17-92f4-41c2-9a65-7d7ebbf5ac90",
+//       loginWith: {
+//         email: true,
+//       },
+//       signUpVerificationMethod: "code",
+//       userAttributes: {
+//         email: {
+//           required: true,
+//         },
+//       },
+//       allowGuestAccess: true,
+//       passwordFormat: {
+//         minLength: 8,
+//         requireLowercase: true,
+//         requireUppercase: true,
+//         requireNumbers: true,
+//         requireSpecialCharacters: true,
+//       },
+//     },
+//   },
+
 
 export default function Home() {
   const [items, setItems] = useState([]);
@@ -57,49 +59,76 @@ export default function Home() {
   //     });
   // }, []);
 
-   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        const session = await fetchAuthSession();
-        const accessToken = session.tokens?.accessToken?.toString();
-        
-        console.log('🔑 Copy this token for Postman:');
-        console.log(accessToken);
-
-        if (!accessToken) {
-          console.error('No access token available');
-          return;
+  //  useEffect(() => {
+  //   const fetchData = async () => {
+  async function getItem() {
+        try {
+          const restOperation = get({ 
+              apiName: 'myRestApi',
+              path: 'items',
+              options: {
+                retryStrategy: {
+                  strategy: 'no-retry' // Overrides default retry strategy
+                },
+              }
+          });
+          const response = await restOperation.response;
+          console.log('GET call succeeded: ', response);
+        } catch (error) {
+          console.log('GET call failed: ', error?.response?.body);
         }
+      // try {
+      //   setLoading(true);
+      
+      //   const session = await fetchAuthSession();
+      //   const accessToken = session.tokens?.accessToken
+        
+      //   Amplify.configure(amplifyConfig, {
+      //     API: {
+      //       REST: {
+      //         headers: async () => {
+      //           return { Authorization: accessToken };
+      //         }
+      //       }
+      //     }
+      //   }); 
 
-        const response = await fetch('https://wvwn7q94s6.execute-api.us-east-2.amazonaws.com/dev/cognito-auth-path', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
+      //   console.log('🔑 Copy this token for Postman:');
+      //   console.log(accessToken);
 
-        if (!response.ok) {
-          console.error('API response not ok:', response.status, response.statusText);
-          const errorText = await response.text();
-          console.error('Error response:', errorText);
-        } else {
-          const data = await response.json();
-          console.log('Raw API response:', data);
-          setRawData(data);
-          setItems(data.Items || data || []);
-        }
-      } catch (err) {
-        console.error('Fetch error:', err);
-      } finally {
-        setLoading(false);
-      }
+      //   if (!accessToken) {
+      //     console.error('No access token available');
+      //     return;
+      //   }
+
+      //   const response = await fetch('https://lbcljdg0hd.execute-api.us-east-2.amazonaws.com/dev/', {
+      //     method: 'GET',
+      //     headers: {
+      //       'Authorization': `Bearer ${accessToken}`,
+      //       'Content-Type': 'application/json'
+      //     }
+      //   });
+
+      //   if (!response.ok) {
+      //     console.error('API response not ok:', response.status, response.statusText);
+      //     const errorText = await response.text();
+      //     console.error('Error response:', errorText);
+      //   } else {
+      //     const data = await response.json();
+      //     console.log('Raw API response:', data);
+      //     setRawData(data);
+      //     setItems(data.Items || data || []);
+      //   }
+      // } catch (err) {
+      //   console.error('Fetch error:', err);
+      // } finally {
+      //   setLoading(false);
+      // }
     };
 
-    fetchData();
-  }, []);
+  //   fetchData();
+  // }, []);
+  getItem()
 
   return (
     <Authenticator>

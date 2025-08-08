@@ -13,6 +13,7 @@ import {
 import { myAPIFunction } from './functions/api-function.js/resource';
 import { storage } from './storage/resource';
 import * as cognito from 'aws-cdk-lib/aws-cognito'
+import { CfnUserPoolGroup } from 'aws-cdk-lib/aws-cognito';
 
 export const backend = defineBackend({
   auth,
@@ -50,7 +51,7 @@ backend.helloFunction.resources.lambda.addToRolePolicy(
   })
 );
 
-const apiStack = backend.createStack("api-stack-");
+const apiStack = backend.createStack("api-stack");
 
 // const myRestApi = new RestApi(apiStack, "RestApi", {
 //   restApiName: "myRestApi",
@@ -77,41 +78,18 @@ const myRestApi = new RestApi(apiStack, "RestApi", {
 });
 
 // create a new Lambda integration
+// const lambdaIntegration = new LambdaIntegration(
+//   backend.helloFunction.resources.lambda
+// );
+
 const lambdaIntegration = new LambdaIntegration(
-  backend.helloFunction.resources.lambda
+  backend.myAPIFunction.resources.lambda
 );
 
-const userPool = new cognito.UserPool(apiStack, 'UserPool', {
-  selfSignUpEnabled: true,
-  signInAliases: {
-    email: true
-  },
-  lambdaTriggers: {
-    postConfirmation: backend.helloFunction.resources.lambda
-  }
-})
-
-// create a new Cognito User Pools authorizer
-const cognitoAuth = new CognitoUserPoolsAuthorizer(apiStack, "CognitoAuth", {
-  cognitoUserPools: [userPool], // Use the userPool you created below instead of backend.auth.resources.userPool
-});
-
-
-
-const userPoolClient = userPool.addClient('UserPoolClient', {
-  authFlows: {
-    userPassword: true,
-    userSrp: true
-  },
-  accessTokenValidity: Duration.days(1),
-  idTokenValidity: Duration.days(1),
-  refreshTokenValidity: Duration.days(30)
-})
-
+// create a new resource path with IAM authorization
 const itemsPath = myRestApi.root.addResource("items", {
   defaultMethodOptions: {
-    authorizationType: AuthorizationType.COGNITO,
-    authorizer: cognitoAuth, // Add this line to reference the authorizer
+    authorizationType: AuthorizationType.IAM,
   },
 });
 
@@ -121,14 +99,20 @@ itemsPath.addMethod("POST", lambdaIntegration);
 itemsPath.addMethod("DELETE", lambdaIntegration);
 itemsPath.addMethod("PUT", lambdaIntegration);
 
+
 // add a proxy resource path to the API
 itemsPath.addProxy({
   anyMethod: true,
   defaultIntegration: lambdaIntegration,
-  defaultMethodOptions: {
-    authorizationType: AuthorizationType.COGNITO,
-    authorizer: cognitoAuth, // Add this line
-  },
+  // defaultMethodOptions: {
+  //   authorizationType: AuthorizationType.COGNITO,
+  //   authorizer: cognitoAuth, // Add this line
+  // },
+});
+
+// create a new Cognito User Pools authorizer
+const cognitoAuth = new CognitoUserPoolsAuthorizer(apiStack, "CognitoAuth", {
+  cognitoUserPools: [backend.auth.resources.userPool], // Use the userPool you created below instead of backend.auth.resources.userPool
 });
 
 // create a new resource path with Cognito authorization
@@ -137,6 +121,40 @@ booksPath.addMethod("GET", lambdaIntegration, {
   authorizationType: AuthorizationType.COGNITO,
   authorizer: cognitoAuth, // Add this line
 });
+
+const userPool = new cognito.UserPool(apiStack, 'UserPool', {
+  selfSignUpEnabled: true,
+  signInAliases: {
+    email: true
+  },
+  lambdaTriggers: {
+    postConfirmation: backend.helloFunction.resources.lambda
+  }
+});
+
+const userPoolClient = userPool.addClient('UserPoolClient', {
+  authFlows: {
+    userPassword: true,
+    userSrp: true
+  },
+  accessTokenValidity: Duration.days(1),
+  idTokenValidity: Duration.days(1),
+  refreshTokenValidity: Duration.days(30)
+});
+
+// Create User Pool groups
+const adminGroup = new CfnUserPoolGroup(apiStack, 'AdminGroup', {
+  groupName: 'ADMIN',
+  userPoolId: userPool.userPoolId,
+  description: 'Admin users group',
+});
+
+const userGroup = new CfnUserPoolGroup(apiStack, 'UserGroup', {
+  groupName: 'USER',
+  userPoolId: userPool.userPoolId,
+  description: 'Regular users group',
+});
+
 
 // create a new IAM policy to allow Invoke access to the API
 const apiRestPolicy = new Policy(apiStack, "RestApiPolicy", {
