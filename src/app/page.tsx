@@ -79,8 +79,8 @@ export default function Home() {
       // try {
       //   setLoading(true);
       
-      //   const session = await fetchAuthSession();
-      //   const accessToken = session.tokens?.accessToken
+        const session = await fetchAuthSession();
+        const accessToken = session.tokens?.accessToken
         
       //   Amplify.configure(amplifyConfig, {
       //     API: {
@@ -92,21 +92,21 @@ export default function Home() {
       //     }
       //   }); 
 
-      //   console.log('🔑 Copy this token for Postman:');
-      //   console.log(accessToken);
+        console.log('🔑 Copy this token for Postman:');
+        console.log(accessToken);
 
       //   if (!accessToken) {
       //     console.error('No access token available');
       //     return;
       //   }
 
-      //   const response = await fetch('https://lbcljdg0hd.execute-api.us-east-2.amazonaws.com/dev/', {
-      //     method: 'GET',
-      //     headers: {
-      //       'Authorization': `Bearer ${accessToken}`,
-      //       'Content-Type': 'application/json'
-      //     }
-      //   });
+        const response = await fetch('https://lbcljdg0hd.execute-api.us-east-2.amazonaws.com/dev/', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
       //   if (!response.ok) {
       //     console.error('API response not ok:', response.status, response.statusText);
