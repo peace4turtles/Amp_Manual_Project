@@ -80,7 +80,7 @@ export default function Home() {
       //   setLoading(true);
       
         const session = await fetchAuthSession();
-        const accessToken = session.tokens?.accessToken
+        const accessToken = session.tokens?.idToken
         
       //   Amplify.configure(amplifyConfig, {
       //     API: {
@@ -99,7 +99,15 @@ export default function Home() {
       //     console.error('No access token available');
       //     return;
       //   }
-
+      Amplify.configure(outputs, {
+        API: {
+          REST: {
+            headers: async () => {
+              return { Authorization: accessToken };
+            }
+          }
+        }
+      });
         const response = await fetch('https://lbcljdg0hd.execute-api.us-east-2.amazonaws.com/dev/', {
           method: 'GET',
           headers: {
