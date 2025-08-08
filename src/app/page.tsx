@@ -75,7 +75,6 @@ export default function Home() {
           const response = await restOperation.response;
           console.log('GET call succeeded: ', response);
         } catch (error) {
-          console.log('GET call failed: ', error?.response?.body);
         }
       // try {
       //   setLoading(true);
