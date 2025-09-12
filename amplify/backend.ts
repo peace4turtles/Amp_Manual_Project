@@ -47,6 +47,16 @@ plan.addRule(
 );
 
 
+// Immediate backup rule - runs every 5 minutes (you can adjust this)
+plan.addRule(
+  new BackupPlanRule({
+    deleteAfter: Duration.days(7), // Keep immediate backups for 7 days
+    ruleName: "immediate-backup-rule",
+    scheduleExpression: Schedule.rate(Duration.minutes(5)), // Runs every 5 minutes
+  })
+);
+
+
 plan.addSelection("BackupPlanSelection", {
   resources: myTables.map((table) => BackupResource.fromDynamoDbTable(table)),
   allowRestores: true,
