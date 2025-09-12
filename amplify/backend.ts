@@ -20,6 +20,10 @@ const backend = defineBackend({
 const backupStack = backend.createStack("backup-stack");
 const myTables = Object.values(backend.data.resources.tables);
 
+// Log the tables being backed up (for debugging)
+console.log('Tables being backed up:', Object.keys(backend.data.resources.tables));
+console.log('Number of tables:', myTables.length);
+
 
 const vault = new BackupVault(backupStack, "BackupVault", {
   backupVaultName: "backup-vault",
