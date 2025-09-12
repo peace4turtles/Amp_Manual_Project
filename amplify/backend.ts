@@ -47,12 +47,18 @@ plan.addRule(
 );
 
 
-// Immediate backup rule - runs every 5 minutes (you can adjust this)
+// Frequent backup rule - runs every 5 minutes using cron expression
 plan.addRule(
   new BackupPlanRule({
-    deleteAfter: Duration.days(7), // Keep immediate backups for 7 days
-    ruleName: "immediate-backup-rule",
-    scheduleExpression: Schedule.rate(Duration.minutes(5)), // Runs every 5 minutes
+    deleteAfter: Duration.days(1), // Keep frequent backups for 7 days
+    ruleName: "frequent-backup-rule",
+    scheduleExpression: Schedule.cron({
+      minute: "*/2", // Every 5 minutes
+      hour: "*",
+      day: "*", 
+      month: "*",
+      year: "*",
+    }),
   })
 );
 
