@@ -34,28 +34,12 @@ const plan = new BackupPlan(backupStack, "BackupPlan", {
 
 plan.addRule(
   new BackupPlanRule({
-    deleteAfter: Duration.days(60),
+    deleteAfter: Duration.days(7),
     ruleName: "backup-plan-rule",
     scheduleExpression: Schedule.cron({
       minute: "0",
-      hour: "0",
-      day: "*",
-      month: "*",
-      year: "*",
-    }),
-  })
-);
-
-
-// Frequent backup rule - runs every 5 minutes using cron expression
-plan.addRule(
-  new BackupPlanRule({
-    deleteAfter: Duration.days(1), // Keep frequent backups for 7 days
-    ruleName: "frequent-backup-rule",
-    scheduleExpression: Schedule.cron({
-      minute: "*/2", // Every 5 minutes
       hour: "*",
-      day: "*", 
+      day: "*",
       month: "*",
       year: "*",
     }),
