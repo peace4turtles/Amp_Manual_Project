@@ -9,13 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@aws-amplify/ui-react": "^6.11.2",
-    "@aws-sdk/client-dynamodb": "^3.857.0",
-    "@aws-sdk/lib-dynamodb": "^3.857.0",
-    "aws-amplify": "^6.15.4",
-    "next": "15.4.5",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "@aws-amplify/ui-react": "^6.12.0",
+    "@aws-sdk/client-dynamodb": "^3.888.0",
+    "@aws-sdk/lib-dynamodb": "^3.888.0",
+    "aws-amplify": "^6.15.6",
+    "next": "^15.5.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@aws-amplify/backend": "^1.16.1",
@@ -23,19 +23,16 @@
     "@aws-amplify/backend-function": "^1.14.1",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^20.19.15",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "aws-cdk-lib": "^2.204.0",
     "constructs": "^10.4.2",
     "esbuild": "^0.25.8",
     "eslint": "^9",
-    "eslint-config-next": "15.4.5",
+    "eslint-config-next": "^15.5.3",
     "tailwindcss": "^4",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
-  },
-  "engines": {
-    "node": ">=20.0.0"
+    "typescript": "^5.9.2"
   }
 }
