@@ -10,9 +10,8 @@
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.12.0",
-    "@aws-sdk/client-dynamodb": "^3.890.0",
-    "@aws-sdk/lib-dynamodb": "^3.890.0",
-    "@aws-sdk/types": "^3.887.0",
+    "@aws-sdk/client-dynamodb": "^3.734.0",
+    "@aws-sdk/lib-dynamodb": "^3.734.0",
     "aws-amplify": "^6.15.6",
     "next": "^15.5.3",
     "react": "19.1.1",
@@ -22,6 +21,9 @@
     "@aws-amplify/backend": "^1.16.1",
     "@aws-amplify/backend-cli": "^1.8.0",
     "@aws-amplify/backend-function": "^1.14.1",
+    "@aws-amplify/data-construct": "^1.16.3",
+    "@aws-amplify/graphql-api-construct": "^1.20.3",
+    "@aws-sdk/types": "^3.734.0",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^24.5.0",
@@ -35,5 +37,29 @@
     "tailwindcss": "^4",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
+  },
+  "overrides": {
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "@xstate/react": {
+      "react": "19.1.1",
+      "react-dom": "19.1.1"
+    },
+    "@aws-amplify/ui-react-core": {
+      "@xstate/react": {
+        "react": "19.1.1",
+        "react-dom": "19.1.1"
+      }
+    },
+    "@aws-amplify/ui-react": {
+      "@xstate/react": {
+        "react": "19.1.1",
+        "react-dom": "19.1.1"
+      }
+    },
+    "@aws-amplify/plugin-types": {},
+    "@aws-amplify/ai-constructs": {
+      "@aws-amplify/plugin-types": {}
+    }
   }
 }
