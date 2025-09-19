@@ -25,9 +25,9 @@ console.log('Tables being backed up:', Object.keys(backend.data.resources.tables
 console.log('Number of tables:', myTables.length);
 
 
-const vault = new BackupVault(backupStack, "BackupVault", {
-  backupVaultName: "backup-vault",
-});
+const envName = process.env.AWS_BRANCH || 'default';
+const vaultName = `model-hub-backup-vault-${envName}`
+const vault = new BackupVault(backupStack, vaultName);
 
 
 const plan = new BackupPlan(backupStack, "BackupPlan", {

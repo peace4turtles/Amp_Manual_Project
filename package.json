@@ -26,7 +26,7 @@
     "@aws-sdk/types": "^3.734.0",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^24.5.0",
+    "@types/node": "^24.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "aws-cdk-lib": "^2.215.0",
